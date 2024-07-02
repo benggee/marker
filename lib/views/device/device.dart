@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class Device extends StatefulWidget {
+class DeviceView extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return _Device();
+    return _DeviceView();
   }
 }
 
-class _Device extends State<Device> {
+class _DeviceView extends State<DeviceView> {
   String? title;
 
   List<Map<String, String>> devices = [

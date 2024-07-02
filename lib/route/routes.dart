@@ -8,9 +8,9 @@ class Routes {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case RoutePath.home:
-        return pageRoute(Home(), settings: settings);
+        return pageRoute(HomeView(), settings: settings);
       case RoutePath.device:
-        return pageRoute(Device(), settings: settings);
+        return pageRoute(DeviceView(), settings: settings);
       default:
         return pageRoute(Scaffold(
                           body: SafeArea(

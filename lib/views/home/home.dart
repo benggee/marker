@@ -1,18 +1,45 @@
+import 'dart:async';
+import 'dart:math';
+import 'package:barcode/barcode.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:marker/route/routes.dart';
 import 'package:marker/route/utils.dart';
+import 'package:marker/widgets/barcode_dialog.dart';
+import 'package:marker/views/home/barcode_model.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class Home extends StatefulWidget {
+class HomeView extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
-    return _Home();
+    return _HomeView();
   }
 
 }
 
-class _Home extends State<Home> {
+class _HomeView extends State<HomeView> {
+  List<BarcodeItem> labelList = [];
+  List<BarcodeItem> printHistoryList = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _requestPermission();
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    List<BarcodeItem> barcodes = await BarcodeModel.fetchBarcodeItems();
+    setState(() {
+      labelList = barcodes.where((item) => !item.printed).toList();
+      printHistoryList = barcodes.where((item) => item.printed).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,6 +53,14 @@ class _Home extends State<Home> {
         )
       )
     );
+  }
+
+  Future<void> _requestPermission() async {
+    if (await Permission.storage.request().isGranted) {
+      print('Permission granted');
+    } else {
+      print('Permission denied');
+    }
   }
 
   Widget _printerView(bool isConnected, String printerName, String status, double batteryLevel) {
@@ -103,6 +138,8 @@ class _Home extends State<Home> {
               Expanded(
                 child:  TextButton(
                   onPressed: () {
+                    BarcodeDialog.show(context);
+                    // showBarcodeDialog(context);
                     print("Button Pressed");
                   },
                   child: Text("生成条码"),
@@ -122,61 +159,62 @@ class _Home extends State<Home> {
       ),
     );
   }
-}
 
-Widget _listView() {
-  return Expanded( // 1. 填满剩下整个页面
-    child: DefaultTabController(
-      length: 2, // 2个Tab
-      child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(50.0), // 设置TabBar的高度
-          child: AppBar(
-            bottom: TabBar(
-              tabs: [
-                Tab(text: '标签列表'), // 第一个Tab
-                Tab(text: '打印历史'), // 第二个Tab
-              ],
+  Widget _listView() {
+    return Expanded( // 1. 填满剩下整个页面
+      child: DefaultTabController(
+        length: 2, // 2个Tab
+        child: Scaffold(
+          appBar: PreferredSize(
+            preferredSize: Size.fromHeight(50.0), // 设置TabBar的高度
+            child: AppBar(
+              bottom: TabBar(
+                tabs: [
+                  Tab(text: '标签列表'), // 第一个Tab
+                  Tab(text: '打印历史'), // 第二个Tab
+                ],
+              ),
             ),
           ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildTabContent([]), // 标签列表内容
-            _buildTabContent([]), // 打印历史内容
-          ],
+          body: TabBarView(
+            children: [
+              _buildTabContent(labelList), // 标签列表内容
+              _buildTabContent(printHistoryList), // 打印历史内容
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-Widget _buildTabContent(List items) {
-  if (items.isEmpty) {
-    return Center(child: Text('暂无数据')); // 3. 没有数据时显示
-  } else {
-    return GridView.builder(
-      itemCount: items.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // 两列
-        childAspectRatio: 0.6, // 调整单元格宽高比
-      ),
-      itemBuilder: (context, index) {
-        return _buildItem(items[index]);
-      },
+  Widget _buildTabContent(List items) {
+    if (items.isEmpty) {
+      return Center(child: Text('暂无数据')); // 3. 没有数据时显示
+    } else {
+      return GridView.builder(
+        itemCount: items.length,
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2, // 两列
+          childAspectRatio: 0.6, // 调整单元格宽高比
+        ),
+        itemBuilder: (context, index) {
+          return _buildItem(items[index]);
+        },
+      );
+    }
+  }
+
+  Widget _buildItem(item) {
+    return Column(
+      children: [
+        Image.network(item['imageUrl'], fit: BoxFit.cover), // 条码图片
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(item['barcodeId'], style: TextStyle(fontWeight: FontWeight.bold)), // 条码ID
+        ),
+        Text(item['dimensions']), // 规格尺寸
+      ],
     );
   }
 }
 
-Widget _buildItem(item) {
-  return Column(
-    children: [
-      Image.network(item['imageUrl'], fit: BoxFit.cover), // 条码图片
-      Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(item['barcodeId'], style: TextStyle(fontWeight: FontWeight.bold)), // 条码ID
-      ),
-      Text(item['dimensions']), // 规格尺寸
-    ],
-  );
-}
