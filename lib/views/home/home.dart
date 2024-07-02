@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 import 'package:barcode/barcode.dart';
 import 'package:flutter/cupertino.dart';
@@ -192,10 +193,13 @@ class _HomeView extends State<HomeView> {
       return Center(child: Text('暂无数据')); // 3. 没有数据时显示
     } else {
       return GridView.builder(
+        padding: const EdgeInsets.all(10.0),
         itemCount: items.length,
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2, // 两列
-          childAspectRatio: 0.6, // 调整单元格宽高比
+          crossAxisSpacing: 10.0, // 水平间距
+          mainAxisSpacing: 10.0, // 垂直间距
+          childAspectRatio: 1.6, // 调整单元格宽高比
         ),
         itemBuilder: (context, index) {
           return _buildItem(items[index]);
@@ -205,15 +209,28 @@ class _HomeView extends State<HomeView> {
   }
 
   Widget _buildItem(item) {
-    return Column(
-      children: [
-        Image.network(item['imageUrl'], fit: BoxFit.cover), // 条码图片
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(item['barcodeId'], style: TextStyle(fontWeight: FontWeight.bold)), // 条码ID
+    return Padding(padding: const EdgeInsets.all(8.0),
+      child: Container(
+        padding: const EdgeInsets.all(8.0),
+        decoration: BoxDecoration (
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(8.0),
         ),
-        Text(item['dimensions']), // 规格尺寸
-      ],
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.file(File(item.url), fit: BoxFit.cover), // 条码图片
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Text(item.id, style: TextStyle(fontWeight: FontWeight.bold)), // 条码ID
+            // ),
+            // Padding(padding: const EdgeInsets.all(8.0),
+            //   child: Text(item.dimensions)
+            // )
+            // Text(item.dimensions), // 规格尺寸
+          ],
+        ),
+      ),
     );
   }
 }

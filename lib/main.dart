@@ -3,7 +3,7 @@ import 'package:marker/route/utils.dart';
 import 'package:marker/route/routes.dart';
 
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const Marker());
 }
 

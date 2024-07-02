@@ -41,6 +41,7 @@ dependencies:
   path_provider: ^2.0.11
   shared_preferences: ^2.0.13
   permission_handler: ^10.2.0
+  flutter_blue_plus: ^1.32.8
 
 dev_dependencies:
   flutter_test:

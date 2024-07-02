@@ -17,17 +17,25 @@ class BarcodeDialog {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               SvgPicture.string(barcodeSvg, width: 300, height: 100),
               SizedBox(height: 10),
-              Text(randomId, style: TextStyle(fontSize: 24)),
-              SizedBox(height: 20),
+              // Text(randomId, style: TextStyle(fontSize: 24)),
+              // SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5),
+                      )
+                    ),
                     onPressed: () async {
                       await _saveBarcode(randomId, barcodeSvg);
                       await _setPrintedStatus(randomId, true);
@@ -39,6 +47,11 @@ class BarcodeDialog {
                     child: Text('去打印'),
                   ),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        )
+                    ),
                     onPressed: () async {
                       await _saveBarcode(randomId, barcodeSvg);
                       print('Save button pressed');

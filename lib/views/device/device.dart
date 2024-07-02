@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DeviceView extends StatefulWidget {
   @override
@@ -22,15 +24,49 @@ class _DeviceView extends State<DeviceView> {
   @override
   void initState(){
     super.initState();
+    _checkPermissions();
+    // _startScan();
+    // WidgetsBinding.instance.addPostFrameCallback((timestamp) {
+    //   var args = ModalRoute.of(context)?.settings.arguments;
+    //   if (args is Map) {
+    //     title = args["title"];
+    //     setState(() {
+    //
+    //     });
+    //
+    //   }
+    // });
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((timestamp) {
-      var args = ModalRoute.of(context)?.settings.arguments;
-      if (args is Map) {
-        title = args["title"];
-        setState(() {
+  Future<void> _checkPermissions() async {
+    if (await Permission.location.request().isGranted &&
+        await Permission.bluetoothScan.request().isGranted &&
+        await Permission.bluetoothConnect.request().isGranted) {
+      // Permissions are granted, proceed with scanning
+      _startScan();
+    } else {
+      print("Permissions not granted");
+    }
+  }
 
+  void _startScan() {
+    setState(() {
+      devices.clear();
+      isLoading = true;
+    });
+    FlutterBluePlus.startScan(timeout: Duration(seconds: 4));
+    FlutterBluePlus.scanResults.listen((results) {
+      for (ScanResult result in results) {
+        print("Device found: ${result.device.advName}");
+        devices.add({
+          "name": result.device.advName ?? "Unknown",
+          "status": "未连接",
         });
       }
+      setState(() {
+        print("Devices: $devices");
+        isLoading = false;
+      });
     });
   }
 
