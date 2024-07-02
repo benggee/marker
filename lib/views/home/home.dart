@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:marker/route/routes.dart';
+import 'package:marker/route/utils.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -66,6 +68,9 @@ class _Home extends State<Home> {
               ),
               child: TextButton(
                 onPressed: () {
+                  Utils.pushWithNamed(context, RoutePath.device, arguments: {
+                    "title": "设备管理",
+                  });
                   // 连接设备的逻辑
                   print('Connecting to device...');
                 },

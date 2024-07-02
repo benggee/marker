@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:marker/views/home.dart';
+import 'package:marker/route/utils.dart';
+import 'package:marker/route/routes.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const Marker());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class Marker extends StatelessWidget {
+  const Marker({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Marker',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Home(),
+      navigatorKey: Utils.navigatorKey,
+      onGenerateRoute: Routes.generateRoute,
+      initialRoute: RoutePath.home,
     );
   }
 }
