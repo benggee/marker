@@ -1,18 +1,17 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math';
-import 'package:barcode/barcode.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:marker/route/routes.dart';
 import 'package:marker/route/utils.dart';
+import 'package:marker/views/device/device_model.dart';
+import 'package:marker/widgets/barcode_content_dialog.dart';
 import 'package:marker/widgets/barcode_dialog.dart';
 import 'package:marker/views/home/barcode_model.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 class HomeView extends StatefulWidget {
   @override
@@ -23,13 +22,18 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeView extends State<HomeView> {
+  DeviceModel _deviceModel = DeviceModel();
+
   List<BarcodeItem> labelList = [];
   List<BarcodeItem> printHistoryList = [];
+  String barcode = "";
 
   @override
   void initState() {
     super.initState();
+
     _requestPermission();
+    _deviceModel.getTargetDevice();
     _fetchData();
   }
 
@@ -47,7 +51,7 @@ class _HomeView extends State<HomeView> {
       body: SafeArea(
         child: Column(
           children: [
-            _printerView(false, "HP Printer Model X", "在线", 0.8),
+            _printerView(false, "HP Printer Model X", "在线", 20),
             _btnView(),
             _listView(),
           ],
@@ -65,56 +69,113 @@ class _HomeView extends State<HomeView> {
   }
 
   Widget _printerView(bool isConnected, String printerName, String status, double batteryLevel) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.print, size: 24.0), // 打印图标
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(printerName, style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold)), // 打印名称
-                  Row(
-                    children: [
-                      Icon(Icons.battery_full, size: 20.0), // 电量图标
-                      SizedBox(width: 5),
-                      Text(status) // 状态
-                    ],
-                  )
-                ],
-              ),
-            ],
-          ),
-          if (!isConnected) // 如果设备未连接
-            TextButtonTheme(
-              data: TextButtonThemeData(
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.blue,
-                  minimumSize: Size(60, 36), // 按钮最小尺寸
-                  padding: EdgeInsets.symmetric(horizontal: 20.0), // 水平内边距
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18.0), // 圆角
+    return ChangeNotifierProvider(create: (context) {
+      return _deviceModel;
+    }, child: Consumer<DeviceModel>(builder: (context, value, child) {
+      bool notConnected = value.targetDevice?.state == 0 || value.targetDevice?.state == null;
+
+      print("value: ${value.targetDevice?.deviceName}, states: ${value.targetDevice?.state}");
+      return Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                if (notConnected)
+                  Icon(
+                      Icons.print_disabled_outlined,
+                      size: 24.0,
+                  ), // 打印图标
+                if (!notConnected)
+                  Icon(
+                      Icons.print_outlined,
+                      size: 24.0
+                  ), // 打印图标
+                SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                        value.targetDevice?.deviceName ?? "Unkown",
+                        style: TextStyle(
+                            fontSize: 16.0,
+                            fontWeight:
+                            FontWeight.bold,
+                            color: notConnected ? Colors.grey.shade500 : Colors.black
+                        )
+                    ), // 打印名称
+                    Row(
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 30.0,
+                              height: 10.0,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                    color: Colors.black,
+                                    width: 1.0
+                                ),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                            ),
+                            Positioned(
+                              left: 1.0,
+                              child:  Container(
+                                // width: (value?.batLevel ?? 0) * 50.0,
+
+                                width: batteryLevel,
+                                height: 8.0,
+                                decoration: BoxDecoration(
+                                    color: value.targetDevice?.state == 0 || value.targetDevice?.state == null ? Colors.grey.shade300 : Colors.green,
+                                  borderRadius: BorderRadius.circular(5.0),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 45,
+                              child: Text('$batteryLevel%', style: TextStyle(fontSize: 10.0)),
+                            )
+                          ],
+                        ),
+                        SizedBox(width: 5),
+                        Text(value.targetDevice?.state == 0 || value.targetDevice?.state == null ? "未连接" : "已连接", style: TextStyle(fontSize: 10.0)),
+                      ],
+                    )
+                  ],
+                ),
+              ],
+            ),
+            if (notConnected) // 如果设备未连接
+              ElevatedButtonTheme(
+                data: ElevatedButtonThemeData(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.blue.shade300,
+                    minimumSize: Size(35, 25), // 按钮最小尺寸
+                    padding: EdgeInsets.symmetric(horizontal: 10.0), // 水平内边距
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
                   ),
                 ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Utils.pushWithNamed(context, RoutePath.device, arguments: {
+                      "title": "设备管理",
+                    });
+                    // 连接设备的逻辑
+                    print('Connecting to device...');
+                  },
+                  child: Text('连接设备', style: TextStyle(fontSize: 10.0)),
+                ),
               ),
-              child: TextButton(
-                onPressed: () {
-                  Utils.pushWithNamed(context, RoutePath.device, arguments: {
-                    "title": "设备管理",
-                  });
-                  // 连接设备的逻辑
-                  print('Connecting to device...');
-                },
-                child: Text('连接设备'),
-              ),
-            ),
-        ],
-      ),
+          ],
+        ),
+      );
+    })
     );
   }
 
@@ -137,27 +198,79 @@ class _HomeView extends State<HomeView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child:  TextButton(
-                  onPressed: () {
-                    BarcodeDialog.show(context);
-                    // showBarcodeDialog(context);
-                    print("Button Pressed");
-                  },
-                  child: Text("生成条码"),
-                ),
+                child: ElevatedButtonTheme(
+                  data: ElevatedButtonThemeData(
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      backgroundColor: Colors.blue,
+                      minimumSize: Size(50, 60),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5.0)
+                      )
+                    )
+                  )   ,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final result = await BarcodeDialog.show(context, BarcodeItem(id: "", url: "", dimensions: "", printed: false));
+                      if (result == true) {
+                        _fetchData();
+                        setState(() {
+
+                        });
+                      }
+                    },
+                    child: Text("生成条码"),
+                  )
+                )
               ),
               SizedBox(width: 16,),
               Expanded(
-                child:  TextButton(
-                  onPressed: () {
-                    print("Button Pressed");
-                  },
-                  child: Text("扫描条码"),
-                ),
-              )
+                  child: ElevatedButtonTheme(
+                      data: ElevatedButtonThemeData(
+                          style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Colors.blue,
+                              minimumSize: Size(50, 60),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5.0)
+                              )
+                          )
+                      )   ,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          _scanBarcode();
+                          print("Button Pressed");
+                        },
+                        child: Text("扫描条码"),
+                      )
+                  )
+              ),
             ],
           )
       ),
+    );
+  }
+
+  Future<void> _scanBarcode() async {
+    try {
+      var result = await BarcodeScanner.scan();
+      setState(() {
+        barcode = result.rawContent;
+      });
+      _showScanResult(context, result.rawContent);
+    } catch (e) {
+      setState(() {
+        barcode = 'Error: $e';
+      });
+    }
+  }
+
+  void _showScanResult(BuildContext context, String result) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return BarcodeContentDialog(id: result);
+      },
     );
   }
 
@@ -209,28 +322,41 @@ class _HomeView extends State<HomeView> {
   }
 
   Widget _buildItem(item) {
-    return Padding(padding: const EdgeInsets.all(8.0),
-      child: Container(
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration (
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(8.0),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: GestureDetector(
+        onTap: () async {
+          final result = await BarcodeDialog.show(context, item);
+          if (result == true) {
+            _fetchData();
+            setState(() {
+
+            });
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(8.0),
+          decoration: BoxDecoration (
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (item.url.endsWith('.png'))
+                Flexible(
+                    child: AspectRatio(
+                      aspectRatio: 2.0,
+                        child: Image.file(File(item.url), fit: BoxFit.cover)
+                        //child: SvgPicture.file(File(item.url), fit: BoxFit.contain)
+                    ),
+                )
+              else
+                Flexible(child: Image.file(File(item.url), fit: BoxFit.cover)), // 条码图
+            ],
+          ),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.file(File(item.url), fit: BoxFit.cover), // 条码图片
-            // Padding(
-            //   padding: const EdgeInsets.all(8.0),
-            //   child: Text(item.id, style: TextStyle(fontWeight: FontWeight.bold)), // 条码ID
-            // ),
-            // Padding(padding: const EdgeInsets.all(8.0),
-            //   child: Text(item.dimensions)
-            // )
-            // Text(item.dimensions), // 规格尺寸
-          ],
-        ),
-      ),
+      )
     );
   }
 }

@@ -42,6 +42,11 @@ dependencies:
   shared_preferences: ^2.0.13
   permission_handler: ^10.2.0
   flutter_blue_plus: ^1.32.8
+  image: ^3.0.8
+  camera: ^0.11.0+1
+  barcode_scan2: ^4.1.0
+  provider: ^6.1.2
+  http: ^0.13.3
 
 dev_dependencies:
   flutter_test:
