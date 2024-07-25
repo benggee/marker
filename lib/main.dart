@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:marker/navigator/tab_navigator.dart';
 import 'package:marker/route/utils.dart';
 import 'package:marker/route/routes.dart';
 
@@ -18,9 +19,10 @@ class Marker extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      navigatorKey: Utils.navigatorKey,
-      onGenerateRoute: Routes.generateRoute,
-      initialRoute: RoutePath.home,
+      home: TabNavigator(),
+      // navigatorKey: Utils.navigatorKey,
+      // onGenerateRoute: Routes.generateRoute,
+      // initialRoute: RoutePath.home,
     );
   }
 }
