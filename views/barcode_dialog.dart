@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:barcode/barcode.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:marker/views/home/barcode_model.dart';
+import '../../views/home/barcode_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:ui' as ui;

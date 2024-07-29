@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:marker/model/object_item_model.dart';
 import 'package:marker/utils/barcode_utils.dart';
 import 'package:marker/utils/str_utils.dart';
 import 'package:marker/widgets/object_list_widget.dart';
+
+import '../model/barcode_model.dart';
 
 class GenBarcodePage extends StatefulWidget {
   const GenBarcodePage({super.key});
@@ -14,8 +15,6 @@ class GenBarcodePage extends StatefulWidget {
 }
 
 class _GenBarcodePageState extends State<GenBarcodePage> {
-  final List<ObjectItemModel> _objectItems = [ObjectItemModel(text: "aa", textController: TextEditingController(text: "aa")), ObjectItemModel(text: "bb", textController: TextEditingController(text: "bb"))];
-
   @override
   Widget build(BuildContext context) {
     String id = generateRandomId();
@@ -23,7 +22,28 @@ class _GenBarcodePageState extends State<GenBarcodePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('生成条形码'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('打印条码'),
+            GestureDetector(
+              onTap: () async {
+                await BarcodeModel().printBarcode(id);
+                print('Print button pressed');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    backgroundColor: Colors.green.shade200,
+                    content: Text('条形码已下发到打印机', style: TextStyle(color: Colors.white)),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+
+                Navigator.of(context).pop(true);
+              },
+              child: Icon(Icons.print_outlined),
+            ),
+          ],
+        ),
       ),
       body: Container(
         alignment: Alignment.center,
@@ -31,16 +51,16 @@ class _GenBarcodePageState extends State<GenBarcodePage> {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-              margin: const EdgeInsets.fromLTRB(0, 10, 0, 10),
-              child: SvgPicture.string(svgBarcodeImage, height: 180),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              margin: const EdgeInsets.fromLTRB(25, 10, 25, 20),
+              child: SvgPicture.string(svgBarcodeImage, height: 120),
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.grey),
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
 
-            ObjectListWidget(objItems: _objectItems, id: id,),
+            ObjectListWidget(id: id,),
           ],
         )
       )

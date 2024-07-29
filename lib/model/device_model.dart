@@ -1,13 +1,16 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:marker/blue/bluetooth_manager.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:marker/store/shared_preference.dart';
 
 class DeviceItem {
   String uuid;
   String deviceName;
   String characteristicsUUID;
   int state; // 0: disconnected, 1: connecting, 2: connected
-  BluetoothDevice device;
+  BluetoothDevice? device;
 
   DeviceItem({
     required this.uuid,
@@ -16,10 +19,30 @@ class DeviceItem {
     required this.state,
     required this.device,
   });
+
+  static fromJson(Map<String, dynamic> json) {
+    return DeviceItem(
+      uuid: json['uuid'],
+      deviceName: json['deviceName'],
+      characteristicsUUID: json['characteristicsUUID'],
+      state: json['state'],
+      device: null,
+    );
+  }
+
+  static Map<String, dynamic> toJson(DeviceItem device) {
+    return {
+      'uuid': device.uuid,
+      'deviceName': device.deviceName,
+      'characteristicsUUID': device.characteristicsUUID,
+      'state': device.state,
+    };
+  }
 }
 
 class DeviceModel with ChangeNotifier, DiagnosticableTreeMixin {
   static final DeviceModel _instance = DeviceModel._internal();
+  final SharedPreference db = SharedPreference.instance;
 
   factory DeviceModel() {
     return _instance;
@@ -28,7 +51,7 @@ class DeviceModel with ChangeNotifier, DiagnosticableTreeMixin {
   DeviceModel._internal();
 
 
-  BluetoothManager _bluetoothManager = BluetoothManager();
+  final BluetoothManager _bluetoothManager = BluetoothManager();
   List<DeviceItem> devices = [];
   DeviceItem? targetDevice; // Currenty device
 
@@ -72,6 +95,22 @@ class DeviceModel with ChangeNotifier, DiagnosticableTreeMixin {
     targetDevice = devices[index];
 
     notifyListeners();
+  }
+
+  Future<void> saveDevice(DeviceItem device) async {
+    // print("device-json-0000001:${jsonEncode(device)}");
+    await db.saveContent("connected-device", jsonEncode(DeviceItem.toJson(device)));
+  }
+
+  Future<DeviceItem?> getDevice() async {
+    String? val = await db.getContent("connected-device");
+    print("device-json:$val");
+    if (val != "") {
+      Map<String, dynamic> json = jsonDecode(val!);
+      return DeviceItem.fromJson(json);
+    }
+
+    return null;
   }
 
   DeviceItem? getTargetDevice() {

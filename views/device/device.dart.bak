@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:marker/blue/bluetooth_manager.dart';
-import 'package:marker/views/device/device_model.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:provider/provider.dart';
 import 'package:marker/route/utils.dart' as RouteUtils;
 

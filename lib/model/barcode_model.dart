@@ -9,7 +9,7 @@ import 'package:image/image.dart' as img;
 import 'package:barcode/barcode.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marker/blue/bluetooth_manager.dart';
-import 'package:marker/views/device/device_model.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

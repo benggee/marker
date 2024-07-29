@@ -6,10 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:marker/route/routes.dart';
 import 'package:marker/route/utils.dart';
-import 'package:marker/views/device/device_model.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:marker/widgets/barcode_content_dialog.dart';
 import 'package:marker/widgets/barcode_dialog.dart';
-import 'package:marker/views/home/barcode_model.dart';
+import '../../../views/home/barcode_model.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 

@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:marker/utils/navigator_util.dart';
 import 'package:marker/utils/view_utils.dart';
+import 'package:marker/widgets/header_widget.dart';
 
 import 'gen_barcode_page.dart';
 
@@ -13,21 +15,42 @@ class PrintPage extends StatefulWidget {
 }
 
 class _PrintPageState extends State<PrintPage> {
+  DeviceModel _deviceModel = DeviceModel();
+  DeviceItem? _currDevice = null;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _fetchCurrDevice();
+  }
+
+  void _fetchCurrDevice() async {
+    _currDevice = await _deviceModel.getDevice();
+    setState(() {
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        margin: EdgeInsets.fromLTRB(10, 0, 10, 0),
-        child:Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+      body: SafeArea(
+        child: Container(
+          margin: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          child:Column(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
+              HeaderWidget(),
+              hiSpace(height: 50),
+              // Text("当前设备: ${_currDevice?.deviceName}"),
               _button('生成条码'),
+              hiSpace(height: 15),
               _button('打印图片'),
             ],
           ),
         ),
-      ),
+       )
     );
   }
 
@@ -42,8 +65,8 @@ class _PrintPageState extends State<PrintPage> {
         }
       },
       child: Container(
-        height: 50,
-        width: 150,
+        height: 60,
+        width: 200,
         margin: EdgeInsets.fromLTRB(10, 0, 10, 0),
         padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
         alignment: Alignment.center,
@@ -56,6 +79,7 @@ class _PrintPageState extends State<PrintPage> {
           children: [
             // Image(image: AssetImage('images/printer.png'), width: 20, height: 20, color: Colors.white,),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
                   title=='生成条码'?Icons.burst_mode_outlined:Icons.picture_in_picture,
@@ -64,7 +88,7 @@ class _PrintPageState extends State<PrintPage> {
                 hiSpace(width: 10),
                 Text(
                   title,
-                  style: TextStyle(fontSize: 14, color: Colors.black87),
+                  style: TextStyle(fontSize: 18, color: Colors.black54),
                 ),
               ],
             )

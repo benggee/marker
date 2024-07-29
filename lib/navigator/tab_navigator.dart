@@ -1,10 +1,12 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:marker/pages/device_page.dart';
 import 'package:marker/pages/print_page.dart';
 import 'package:marker/pages/scan_page.dart';
-import 'package:marker/pages/search_page.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
 
 class TabNavigator extends StatefulWidget {
   const TabNavigator({super.key});
@@ -23,6 +25,23 @@ class _TabNavigatorState extends State<TabNavigator> {
   );
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _requestPermission();
+  }
+
+  Future<void> _requestPermission() async {
+    if (await Permission.storage
+        .request()
+        .isGranted) {
+      print('Permission granted');
+    } else {
+      print('Permission denied');
+    }
+  }
+
+      @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -30,8 +49,8 @@ class _TabNavigatorState extends State<TabNavigator> {
         controller: _controller,
         children: <Widget>[
           PrintPage(),
-          SearchPage(),
           ScanPage(),
+          // ChangeNotifierProvider(create: (context) => DeviceModel(), child: DevicePage(),)
           DevicePage(),
         ],
       ),
@@ -57,15 +76,6 @@ class _TabNavigatorState extends State<TabNavigator> {
               Icons.print,
             ),
             label: '打印',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.search,
-            ),
-            activeIcon: Icon(
-              Icons.search,
-            ),
-            label: '搜索',
           ),
           BottomNavigationBarItem(
             icon: Icon(
