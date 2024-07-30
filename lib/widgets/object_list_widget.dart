@@ -4,14 +4,11 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:marker/db/database_helper.dart';
 import 'package:marker/model/object_item_model.dart';
 import 'package:marker/store/shared_preference.dart';
 
 class ObjectListWidget extends StatefulWidget {
   final String id;
-
-
   ObjectListWidget({super.key, required this.id});
 
   @override
@@ -32,7 +29,7 @@ class _ObjectListWidgetState extends State<ObjectListWidget> {
     String? data = await _getContent(widget.id);
 
     if (data != null) {
-      List<String>.from(jsonDecode(data!)).forEach((element) {
+      List<String>.from(jsonDecode(data)).forEach((element) {
            objItems.add(ObjectItemModel(text: element, textController: TextEditingController(text: element)));
       });
       setState(() {
@@ -51,11 +48,9 @@ class _ObjectListWidgetState extends State<ObjectListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: ListView(
-        children: _buildObjectList(),
-      ),
-    );
+    return ListView(
+            children: _buildObjectList(),
+          );
   }
 
   _buildObjectList() {

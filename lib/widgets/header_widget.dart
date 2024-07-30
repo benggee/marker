@@ -13,7 +13,7 @@ class HeaderWidget extends StatefulWidget {
 class _HeaderWidgetState extends State<HeaderWidget> {
   DeviceModel _deviceModel = DeviceModel();
   DeviceItem? _currDevice = null;
-  double batteryLevel = 0;
+  double batteryLevel = 20.9;
 
   @override
   void initState() {
@@ -114,6 +114,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                           decoration: BoxDecoration(
                             color: Colors.green,
                             borderRadius: BorderRadius.circular(5.0),
+                            border: Border.all(
+                                color: Colors.green,
+                                width: 1.0
+                            )
                           ),
                         ),
                       ),

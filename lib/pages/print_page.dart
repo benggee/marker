@@ -4,6 +4,7 @@ import 'package:marker/model/device_model.dart';
 import 'package:marker/utils/navigator_util.dart';
 import 'package:marker/utils/view_utils.dart';
 import 'package:marker/widgets/header_widget.dart';
+import 'package:provider/provider.dart';
 
 import 'gen_barcode_page.dart';
 
@@ -15,25 +16,26 @@ class PrintPage extends StatefulWidget {
 }
 
 class _PrintPageState extends State<PrintPage> {
-  DeviceModel _deviceModel = DeviceModel();
   DeviceItem? _currDevice = null;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
 
     _fetchCurrDevice();
   }
 
   void _fetchCurrDevice() async {
-    _currDevice = await _deviceModel.getDevice();
+    DeviceModel deviceModel = Provider.of<DeviceModel>(context, listen: false);
+    _currDevice = await deviceModel.getDevice();
     setState(() {
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    return GenBarcodePage();
+
     return Scaffold(
       body: SafeArea(
         child: Container(

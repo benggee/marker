@@ -100,5 +100,4 @@ class BluetoothManager {
       throw Exception('Target characteristic is not set');
     }
   }
-
 }

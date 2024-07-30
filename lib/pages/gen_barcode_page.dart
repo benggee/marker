@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:marker/utils/barcode_utils.dart';
 import 'package:marker/utils/str_utils.dart';
+import 'package:marker/widgets/header_widget.dart';
 import 'package:marker/widgets/object_list_widget.dart';
 
 import '../model/barcode_model.dart';
@@ -25,7 +26,8 @@ class _GenBarcodePageState extends State<GenBarcodePage> {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('打印条码'),
+            HeaderWidget(),
+            // Text('打印条码'),
             GestureDetector(
               onTap: () async {
                 await BarcodeModel().printBarcode(id);
@@ -59,8 +61,7 @@ class _GenBarcodePageState extends State<GenBarcodePage> {
                 borderRadius: BorderRadius.circular(6),
               ),
             ),
-
-            ObjectListWidget(id: id,),
+            Expanded(child: ObjectListWidget(id: id)),
           ],
         )
       )

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:marker/blue/bluetooth_manager.dart';
 import 'package:marker/model/device_model.dart';
 import 'package:provider/provider.dart';
-import 'package:marker/route/utils.dart' as RouteUtils;
+import 'package:marker/utils/route.dart' as RouteUtils;
 
 class DevicePage extends StatefulWidget {
   const DevicePage({super.key});
@@ -15,29 +15,27 @@ class DevicePage extends StatefulWidget {
 }
 
 class _DevicePage extends State<DevicePage> {
-  DeviceModel _deviceModel = DeviceModel();
-  BluetoothManager _bluetoothManager = BluetoothManager();
+  final BluetoothManager _bluetoothManager = BluetoothManager();
   String? title;
   bool isLoading = false;
 
   @override
   void initState(){
     super.initState();
-    if (_deviceModel == null) {
-      _deviceModel = DeviceModel();
-    }
+
     _fetchDevice();
   }
 
   Future<void> _fetchDevice() async {
-    await _deviceModel.fetchDevices();
+
+    DeviceModel deviceModel = Provider.of<DeviceModel>(context, listen: false);
+
+    await deviceModel.fetchDevices();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<DeviceModel>(create: (context) {
-      return _deviceModel;
-    }, child: Scaffold(
+    return Scaffold(
       appBar: AppBar(title: Text(title ?? "")),
       body: SafeArea(
         child: Stack(
@@ -69,7 +67,6 @@ class _DevicePage extends State<DevicePage> {
           ],
         ),
       ),
-    )
     );
   }
 
@@ -91,10 +88,6 @@ class _DevicePage extends State<DevicePage> {
 
                     await _bluetoothManager.connectToDevice(value.devices[index].device!);
 
-
-
-                    // _deviceModel.setState(index, 1);
-
                     setState(() {
                       isLoading = false;
                     });
@@ -111,10 +104,9 @@ class _DevicePage extends State<DevicePage> {
                           actions: [
                             TextButton(
                               onPressed: () async {
-                                print("=======================");
-                                await _deviceModel.saveDevice(value.devices[index]);
-                                print("保存成功, device: ${value.devices[index].deviceName}");
-                                //RouteUtils.Utils.pushWithNamed(context, '/');
+                                DeviceModel deviceModel = Provider.of<DeviceModel>(context, listen: false);
+                                await deviceModel.saveDevice(value.devices[index]);
+                                RouteUtils.Utils.pushWithNamed(context, '/');
                               },
                               child: Text('去打印'),
                             ),

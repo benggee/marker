@@ -1,12 +1,10 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:marker/model/device_model.dart';
 import 'package:marker/pages/device_page.dart';
 import 'package:marker/pages/print_page.dart';
 import 'package:marker/pages/scan_page.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:provider/provider.dart';
 
 class TabNavigator extends StatefulWidget {
   const TabNavigator({super.key});

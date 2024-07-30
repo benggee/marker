@@ -28,7 +28,6 @@ class BarcodeItem {
 }
 
 class BarcodeModel {
-  DeviceModel _deviceModel = DeviceModel();
   BluetoothManager _bluetoothManager = BluetoothManager();
 
   static Future<List<BarcodeItem>> fetchBarcodeItems() async {
@@ -54,8 +53,6 @@ class BarcodeModel {
 
     final Barcode code128 = Barcode.code93();
     final String data = id;
-
-    print("id: $id");
 
     final String svgStr = code128.toSvg(data, width: 300, height: 100);
 
