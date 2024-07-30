@@ -16,9 +16,20 @@ class GenBarcodePage extends StatefulWidget {
 }
 
 class _GenBarcodePageState extends State<GenBarcodePage> {
+  bool isLoading = false;
+  late String id;
+
+  @override
+  void initState() {
+    super.initState();
+    id = generateRandomId();
+  }
+
   @override
   Widget build(BuildContext context) {
-    String id = generateRandomId();
+    // String id = generateRandomId();
+
+    print("id:$id");
     String svgBarcodeImage = genBarcode(id);
 
     return Scaffold(
@@ -30,8 +41,14 @@ class _GenBarcodePageState extends State<GenBarcodePage> {
             // Text('打印条码'),
             GestureDetector(
               onTap: () async {
+                setState(() {
+                  isLoading = true;
+                });
+
                 await BarcodeModel().printBarcode(id);
-                print('Print button pressed');
+                setState(() {
+                  isLoading = false;
+                });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     backgroundColor: Colors.green.shade200,
@@ -39,31 +56,37 @@ class _GenBarcodePageState extends State<GenBarcodePage> {
                     duration: Duration(seconds: 2),
                   ),
                 );
-
-                Navigator.of(context).pop(true);
               },
               child: Icon(Icons.print_outlined),
             ),
           ],
         ),
       ),
-      body: Container(
-        alignment: Alignment.center,
-        padding: EdgeInsets.all(10),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-              margin: const EdgeInsets.fromLTRB(25, 10, 25, 20),
-              child: SvgPicture.string(svgBarcodeImage, height: 120),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(6),
-              ),
+      body: Stack(
+        children: [
+          if (isLoading)
+            Center(
+              child: CircularProgressIndicator(),
             ),
-            Expanded(child: ObjectListWidget(id: id)),
-          ],
-        )
+          Container(
+              alignment: Alignment.center,
+              padding: EdgeInsets.all(10),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                    margin: const EdgeInsets.fromLTRB(25, 10, 25, 20),
+                    child: SvgPicture.string(svgBarcodeImage, height: 120),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  Expanded(child: ObjectListWidget(id: id)),
+                ],
+              )
+          )
+        ],
       )
     );
   }

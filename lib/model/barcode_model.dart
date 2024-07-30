@@ -37,8 +37,6 @@ class BarcodeModel {
     final files = directory.listSync().where((file) => file.path.endsWith('.png')).toList();
     List<BarcodeItem> barcodes = [];
 
-    print("files: $files");
-
     for (var file in files) {
       final id = file.path.split('/').last.split('.').first;
       final printed = prefs.getBool('${id}_printed') ?? false;
@@ -49,8 +47,6 @@ class BarcodeModel {
   }
 
   Future<void> printBarcode(String id) async {
-
-
     final Barcode code128 = Barcode.code93();
     final String data = id;
 
@@ -96,12 +92,11 @@ class BarcodeModel {
     List<int> suffix = [0xA6, 0xA6, 0xA6, 0xA6, 0x01];
 
     await _bluetoothManager.writeToCharacteristic(prefix);
-    await Future.delayed(Duration(milliseconds: 10));
+    await Future.delayed(Duration(microseconds: 100));
 
-    // List<Uint8List> chunks = sliceList(dataRows, 45);
     for (Uint8List chunk in dataRows) {
       await _bluetoothManager.writeToCharacteristic(chunk);
-      await Future.delayed(Duration(milliseconds: 1));
+      await Future.delayed(Duration(microseconds: 100));
     }
 
     await _bluetoothManager.writeToCharacteristic(suffix);
