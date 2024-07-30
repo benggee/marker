@@ -1,41 +1,41 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:marker/blue/bluetooth_manager.dart';
-import 'package:marker/views/device/device_model.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:provider/provider.dart';
-import 'package:marker/route/utils.dart' as RouteUtils;
+import 'package:marker/utils/route.dart' as RouteUtils;
 
-class DeviceView extends StatefulWidget {
+class DevicePage extends StatefulWidget {
+  const DevicePage({super.key});
+
   @override
   State<StatefulWidget> createState() {
-    return _DeviceView();
+    return _DevicePage();
   }
 }
 
-class _DeviceView extends State<DeviceView> {
-  DeviceModel _deviceModel = DeviceModel();
-  BluetoothManager _bluetoothManager = BluetoothManager();
+class _DevicePage extends State<DevicePage> {
+  final BluetoothManager _bluetoothManager = BluetoothManager();
   String? title;
   bool isLoading = false;
 
   @override
   void initState(){
     super.initState();
-    if (_deviceModel == null) {
-      _deviceModel = DeviceModel();
-    }
+
     _fetchDevice();
   }
 
   Future<void> _fetchDevice() async {
-    await _deviceModel.fetchDevices();
+
+    DeviceModel deviceModel = Provider.of<DeviceModel>(context, listen: false);
+
+    await deviceModel.fetchDevices();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<DeviceModel>(create: (context) {
-      return _deviceModel;
-    }, child: Scaffold(
+    return Scaffold(
       appBar: AppBar(title: Text(title ?? "")),
       body: SafeArea(
         child: Stack(
@@ -51,6 +51,7 @@ class _DeviceView extends State<DeviceView> {
               right: 0,
               child: Center(
                 child: FloatingActionButton(
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(35),
                   ),
@@ -59,14 +60,13 @@ class _DeviceView extends State<DeviceView> {
                     _fetchDevice();
 
                   },
-                  child: Icon(Icons.search),
+                  child: Text('刷新', style: TextStyle(color: Colors.black54)),
                 ),
               ),
             ),
           ],
         ),
       ),
-    )
     );
   }
 
@@ -80,15 +80,13 @@ class _DeviceView extends State<DeviceView> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(value.devices[index].deviceName!),
-                  trailing: Text(value.devices[index].state == 0 ? '未连接' : '已连接'),
+                  // trailing: Text(value.devices[index].state == 0 ? '未连接' : '已连接'),
                   onTap: () async {
                     setState(() {
                       isLoading = true;
                     });
 
                     await _bluetoothManager.connectToDevice(value.devices[index].device!);
-
-                    _deviceModel.setState(index, 1);
 
                     setState(() {
                       isLoading = false;
@@ -105,7 +103,9 @@ class _DeviceView extends State<DeviceView> {
                           content: Text('已连接到设备: ${value.devices[index].deviceName}'),
                           actions: [
                             TextButton(
-                              onPressed: () {
+                              onPressed: () async {
+                                DeviceModel deviceModel = Provider.of<DeviceModel>(context, listen: false);
+                                await deviceModel.saveDevice(value.devices[index]);
                                 RouteUtils.Utils.pushWithNamed(context, '/');
                               },
                               child: Text('去打印'),

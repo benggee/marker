@@ -1,11 +1,13 @@
+
+
 import 'package:shared_preferences/shared_preferences.dart';
 
-class BarcodeContent {
-  BarcodeContent._privateConstructor();
+class SharedPreference {
+  SharedPreference._privateConstructor();
 
-  static final BarcodeContent _instance = BarcodeContent._privateConstructor();
+  static final SharedPreference _instance = SharedPreference._privateConstructor();
 
-  static BarcodeContent get instance => _instance;
+  static SharedPreference get instance => _instance;
 
   Future<String?> getContent(String id) async {
     final prefs = await SharedPreferences.getInstance();

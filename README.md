@@ -6,7 +6,7 @@ marker是针对MinPrinter项目开发的一个基于Flutter开发的条码管理
 # 项目预览
 - 应用首页
 
-<img src="doc/images/app-home.jpg" 
+<img src="doc/images/home.jpg" 
 width="300"/>
 
 - 扫描标签

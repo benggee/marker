@@ -9,7 +9,7 @@ import 'package:image/image.dart' as img;
 import 'package:barcode/barcode.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:marker/blue/bluetooth_manager.dart';
-import 'package:marker/views/device/device_model.dart';
+import 'package:marker/model/device_model.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,7 +28,6 @@ class BarcodeItem {
 }
 
 class BarcodeModel {
-  DeviceModel _deviceModel = DeviceModel();
   BluetoothManager _bluetoothManager = BluetoothManager();
 
   static Future<List<BarcodeItem>> fetchBarcodeItems() async {
@@ -37,8 +36,6 @@ class BarcodeModel {
 
     final files = directory.listSync().where((file) => file.path.endsWith('.png')).toList();
     List<BarcodeItem> barcodes = [];
-
-    print("files: $files");
 
     for (var file in files) {
       final id = file.path.split('/').last.split('.').first;
@@ -50,12 +47,8 @@ class BarcodeModel {
   }
 
   Future<void> printBarcode(String id) async {
-
-
     final Barcode code128 = Barcode.code93();
     final String data = id;
-
-    print("id: $id");
 
     final String svgStr = code128.toSvg(data, width: 300, height: 100);
 
@@ -99,12 +92,11 @@ class BarcodeModel {
     List<int> suffix = [0xA6, 0xA6, 0xA6, 0xA6, 0x01];
 
     await _bluetoothManager.writeToCharacteristic(prefix);
-    await Future.delayed(Duration(milliseconds: 10));
+    await Future.delayed(Duration(microseconds: 100));
 
-    // List<Uint8List> chunks = sliceList(dataRows, 45);
     for (Uint8List chunk in dataRows) {
       await _bluetoothManager.writeToCharacteristic(chunk);
-      await Future.delayed(Duration(milliseconds: 1));
+      await Future.delayed(Duration(microseconds: 100));
     }
 
     await _bluetoothManager.writeToCharacteristic(suffix);
