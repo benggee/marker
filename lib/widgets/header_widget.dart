@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../model/device_model.dart';
 
@@ -11,7 +12,6 @@ class HeaderWidget extends StatefulWidget {
 }
 
 class _HeaderWidgetState extends State<HeaderWidget> {
-  DeviceModel _deviceModel = DeviceModel();
   DeviceItem? _currDevice = null;
   double batteryLevel = 20.9;
 
@@ -22,7 +22,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
   }
 
   void _fetchCurrDevice() async {
-    _currDevice = await _deviceModel.getDevice();
+    DeviceModel deviceModel = Provider.of<DeviceModel>(context, listen: false);
+    _currDevice = await deviceModel.getDevice();
     setState(() {
     });
   }

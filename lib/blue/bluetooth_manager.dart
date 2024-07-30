@@ -22,10 +22,18 @@ class BluetoothManager {
 
   // Connect to device
   Future<void> connectToDevice(BluetoothDevice device) async {
+    var statusScan = await Permission.bluetoothScan.status;
+    var statusConnect = await Permission.bluetoothConnect.status;
 
-    if (await Permission.location.request().isGranted &&
-        await Permission.bluetoothScan.request().isGranted &&
-        await Permission.bluetoothConnect.request().isGranted) {
+    if (!statusScan.isGranted || !statusConnect.isGranted) {
+      statusScan = await Permission.bluetoothScan.request();
+      statusConnect = await Permission.bluetoothConnect.request();
+    }
+
+    print('After requesting, Bluetooth Scan Permission: $statusScan');
+    print('After requesting, Bluetooth Connect Permission: $statusConnect');
+
+    if (statusScan.isGranted && statusConnect.isGranted) {
       if (device.isConnected == false) {
         await device.connect();
       }
@@ -33,6 +41,16 @@ class BluetoothManager {
     } else {
       throw Exception("Permissions not granted");
     }
+
+    // if (await Permission.bluetoothScan.request().isGranted &&
+    //     await Permission.bluetoothConnect.request().isGranted) {
+    //   if (device.isConnected == false) {
+    //     await device.connect();
+    //   }
+    //   await _discoverAndSetCharacteristic(device);
+    // } else {
+    //   throw Exception("Permissions not granted");
+    // }
   }
 
   // Disconnect from device

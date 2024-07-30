@@ -41,60 +41,61 @@ class _TabNavigatorState extends State<TabNavigator> {
 
       @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: PageView(
-        controller: _controller,
-        children: <Widget>[
-          PrintPage(),
-          ScanPage(),
-          // ChangeNotifierProvider(create: (context) => DeviceModel(), child: DevicePage(),)
-          DevicePage(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _curTab,
-        unselectedItemColor: _defaultColor,
-        selectedItemColor: _activeColor,
-        showUnselectedLabels: true,
-        showSelectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          _controller.jumpToPage(index);
-          setState(() {
-            _curTab = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.print,
-            ),
-            activeIcon: Icon(
-              Icons.print,
-            ),
-            label: '打印',
+    return
+     Scaffold(
+          backgroundColor: Colors.white,
+          body: PageView(
+            controller: _controller,
+            children: <Widget>[
+              PrintPage(),
+              ScanPage(),
+              // ChangeNotifierProvider(create: (context) => DeviceModel(), child: DevicePage(),)
+              DevicePage(),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.scanner,
-            ),
-            activeIcon: Icon(
-              Icons.scanner,
-            ),
-            label: '扫描',
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _curTab,
+            unselectedItemColor: _defaultColor,
+            selectedItemColor: _activeColor,
+            showUnselectedLabels: true,
+            showSelectedLabels: true,
+            type: BottomNavigationBarType.fixed,
+            onTap: (index) {
+              _controller.jumpToPage(index);
+              setState(() {
+                _curTab = index;
+              });
+            },
+            items: [
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.print,
+                ),
+                activeIcon: Icon(
+                  Icons.print,
+                ),
+                label: '打印',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.scanner,
+                ),
+                activeIcon: Icon(
+                  Icons.scanner,
+                ),
+                label: '扫描',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(
+                  Icons.devices,
+                ),
+                activeIcon: Icon(
+                  Icons.devices,
+                ),
+                label: '设备',
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.devices,
-            ),
-            activeIcon: Icon(
-              Icons.devices,
-            ),
-            label: '设备',
-          ),
-        ],
-      ),
-    );
+        );
   }
 }

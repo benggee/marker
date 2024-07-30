@@ -10,11 +10,11 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
       MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => DeviceModel())
-        ],
-        child: const Marker(),
-      )
+          providers: [
+            ChangeNotifierProvider(create: (_) => DeviceModel())
+          ],
+          child: const Marker(),
+      ),
   );
 }
 
@@ -24,15 +24,13 @@ class Marker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Marker',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
       home: TabNavigator(),
-      // navigatorKey: Utils.navigatorKey,
-      // onGenerateRoute: Routes.generateRoute,
-      // initialRoute: RoutePath.home,
     );
   }
 }

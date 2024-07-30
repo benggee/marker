@@ -80,7 +80,7 @@ class _DevicePage extends State<DevicePage> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(value.devices[index].deviceName!),
-                  trailing: Text(value.devices[index].state == 0 ? '未连接' : '已连接'),
+                  // trailing: Text(value.devices[index].state == 0 ? '未连接' : '已连接'),
                   onTap: () async {
                     setState(() {
                       isLoading = true;
