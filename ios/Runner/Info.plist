@@ -2,18 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <string></string>
-    <key>NSCameraUsageDescription</key>
-    <string>需要访问相机以扫描条码</string>
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>需要蓝牙以便连接设备</string>
-    <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>需要蓝牙以便连接设备</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Marker</string>
+	<string>Marker3</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -21,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>marker</string>
+	<string>marker3</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
