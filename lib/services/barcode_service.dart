@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:ui';
 import '../models/barcode_model.dart';
@@ -187,8 +186,11 @@ class BarcodeService {
     int blackPixels = 0;
     int whitePixels = 0;
     for (int pixel in pixels) {
-      if (pixel == 0) blackPixels++;
-      else whitePixels++;
+      if (pixel == 0) {
+        blackPixels++;
+      } else {
+        whitePixels++;
+      }
     }
     Logger.i('像素统计 - 黑色: $blackPixels, 白色: $whitePixels');
 
@@ -223,7 +225,7 @@ class BarcodeService {
     Logger.i('协议头十进制: $prefix');
 
     Logger.i('准备发送数据：条形码 ${dataRows.length} 行，ID下方已增加额外空白');
-    Logger.i('每行数据大小: ${(paperWidth ~/ 8)} bytes, 图像尺寸: ${width}x${height}');
+    Logger.i('每行数据大小: ${paperWidth ~/ 8} bytes, 图像尺寸: ${width}x$height');
 
     // 发送协议头
     Logger.i('即将发送协议头: $prefix');

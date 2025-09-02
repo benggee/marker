@@ -145,6 +145,7 @@ class DatabaseService {
     final results = db.select('SELECT * FROM inventory_items WHERE barcodeId = ? ORDER BY createdAt DESC', [barcodeId]);
     
     return results.map((row) => InventoryItemModel(
+      id: row['id'] as int,
       barcodeId: row['barcodeId'] as String,
       name: row['name'] as String,
       description: row['description'] as String? ?? '',
