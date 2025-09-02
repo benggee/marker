@@ -90,6 +90,7 @@ class DatabaseService {
     final results = db.select('SELECT * FROM barcodes ORDER BY createdAt DESC');
     
     return results.map((row) => BarcodeModel(
+      id: row['id'] as int,
       barcodeId: row['barcodeId'] as String,
       content: row['content'] as String,
       createdAt: DateTime.parse(row['createdAt'] as String),
@@ -105,6 +106,7 @@ class DatabaseService {
     
     final row = results.first;
     return BarcodeModel(
+      id: row['id'] as int,
       barcodeId: row['barcodeId'] as String,
       content: row['content'] as String,
       createdAt: DateTime.parse(row['createdAt'] as String),

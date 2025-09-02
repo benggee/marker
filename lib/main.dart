@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: '条形码管理系统',
         theme: AppTheme.lightTheme,
+        debugShowCheckedModeBanner: false,
         home: const MainPage(),
       ),
     );

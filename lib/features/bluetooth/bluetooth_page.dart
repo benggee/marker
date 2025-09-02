@@ -222,6 +222,16 @@ class _BluetoothPageState extends State<BluetoothPage> {
       return const SizedBox.shrink();
     }
 
+    // 去重：按设备地址去重，保留最新的记录
+    final Map<String, BluetoothDeviceModel> uniqueDevices = {};
+    for (final device in provider.bluetoothDevices) {
+      if (!uniqueDevices.containsKey(device.address) ||
+          device.lastConnected.isAfter(uniqueDevices[device.address]!.lastConnected)) {
+        uniqueDevices[device.address] = device;
+      }
+    }
+    final deduplicatedDevices = uniqueDevices.values.toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -238,9 +248,9 @@ class _BluetoothPageState extends State<BluetoothPage> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: provider.bluetoothDevices.length,
+          itemCount: deduplicatedDevices.length,
           itemBuilder: (context, index) {
-            final device = provider.bluetoothDevices[index];
+            final device = deduplicatedDevices[index];
             return _buildDeviceTile(device, provider, isRemembered: true);
           },
         ),
@@ -288,21 +298,34 @@ class _BluetoothPageState extends State<BluetoothPage> {
   }
 
   Widget _buildDeviceTile(BluetoothDeviceModel device, AppProvider provider, {bool isRemembered = false}) {
+    // 检查当前是否真的连接到这个设备
+    final connectedDevice = provider.connectedDevice;
+    final isCurrentlyConnected = connectedDevice != null && 
+        connectedDevice.remoteId.toString() == device.address;
+    
     return ListTile(
       leading: Icon(
-        device.isConnected ? Icons.bluetooth_connected : Icons.bluetooth,
-        color: device.isConnected ? Colors.green : Colors.grey,
+        isCurrentlyConnected ? Icons.bluetooth_connected : Icons.bluetooth,
+        color: isCurrentlyConnected ? Colors.green : Colors.grey,
       ),
       title: Text(device.name),
       subtitle: Text(device.address),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (device.isConnected)
+          if (isCurrentlyConnected)
             const Chip(
               label: Text('已连接'),
               backgroundColor: Colors.green,
               labelStyle: TextStyle(color: Colors.white),
+            )
+          else if (isRemembered)
+            ElevatedButton(
+              onPressed: () => _reconnectToDevice(device, provider),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              ),
+              child: const Text('连接'),
             ),
           if (isRemembered)
             IconButton(
@@ -311,7 +334,7 @@ class _BluetoothPageState extends State<BluetoothPage> {
             ),
         ],
       ),
-      onTap: () => _connectToDevice(device, provider),
+      onTap: isCurrentlyConnected ? null : () => _reconnectToDevice(device, provider),
     );
   }
 
@@ -327,12 +350,48 @@ class _BluetoothPageState extends State<BluetoothPage> {
     );
   }
 
-  Future<void> _connectToDevice(BluetoothDeviceModel device, AppProvider provider) async {
-    // 这里需要从数据库模型转换为实际的BluetoothDevice对象
-    // 由于数据库只存储了基本信息，这里简化处理
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('请重新扫描并连接设备')),
-    );
+  Future<void> _reconnectToDevice(BluetoothDeviceModel device, AppProvider provider) async {
+    try {
+      // 显示连接中状态
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('正在连接到 ${device.name}...'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      // 尝试通过设备地址重新连接
+      final success = await provider.bluetoothService.connectToDeviceByAddress(device.address);
+      
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('成功连接到 ${device.name}'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('连接 ${device.name} 失败，请尝试重新扫描'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: '扫描',
+              onPressed: _startScan,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('连接失败: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _connectToDiscoveredDevice(BluetoothDevice device) async {

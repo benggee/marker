@@ -35,7 +35,7 @@ class _BarcodePageState extends State<BarcodePage> {
         leadingWidth: 160, // 给状态指示器留足够的空间
         actions: [
           IconButton(
-            icon: const Icon(Icons.add),
+            icon: const Icon(Icons.print_outlined),
             onPressed: _generateBarcode,
           ),
         ],
@@ -99,58 +99,75 @@ class _BarcodePageState extends State<BarcodePage> {
 
   Widget _buildBarcodeCard(BarcodeModel barcode, AppProvider provider) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
               children: [
-                Expanded(
-                  child: Text(
-                    'ID: ${barcode.barcodeId.padLeft(6, '0')}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                const SizedBox(height: 32), // 给条形码上方更多间距
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20), // 条形码容器内部间距
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade200),
+                  ),
+                  child: BarcodeDisplayWidget(
+                    barcodeId: barcode.barcodeId,
+                    width: 280,
+                    height: 80,
                   ),
                 ),
-                PopupMenuButton<String>(
-                  onSelected: (value) => _handleMenuAction(value, barcode, provider),
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'print',
-                      child: Text('打印'),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Text('删除'),
+                const SizedBox(height: 16), // 底部间距
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _printBarcode(barcode, provider),
+                        icon: const Icon(Icons.print),
+                        label: const Text('打印'),
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            BarcodeDisplayWidget(
-              barcodeId: barcode.barcodeId,
-              width: 300,
-              height: 120,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _printBarcode(barcode, provider),
-                    icon: const Icon(Icons.print),
-                    label: const Text('打印'),
-
+          ),
+          // 菜单按钮放在卡片外围右上角
+          Positioned(
+            top: -2,
+            right: -2,
+            child: PopupMenuButton<String>(
+              onSelected: (value) => _handleMenuAction(value, barcode, provider),
+              color: Colors.white,
+              elevation: 8,
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'print',
+                  child: Row(
+                    children: [
+                      Icon(Icons.print, size: 20, color: Colors.grey),
+                      SizedBox(width: 8),
+                      Text('打印'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, size: 20, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('删除', style: TextStyle(color: Colors.red)),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -257,6 +274,8 @@ class _BarcodePageState extends State<BarcodePage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        elevation: 24,
         title: const Text('删除条形码'),
         content: Text('确定要删除条形码 ${barcode.barcodeId.padLeft(6, '0')} 吗？'),
         actions: [
@@ -266,6 +285,9 @@ class _BarcodePageState extends State<BarcodePage> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
             child: const Text('删除'),
           ),
         ],
@@ -273,14 +295,34 @@ class _BarcodePageState extends State<BarcodePage> {
     );
 
     if (confirmed == true) {
-      await provider.barcodeService.deleteBarcode(barcode.id!);
-      await provider.loadBarcodes();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('条形码已删除')),
-        );
+      try {
+        print('开始删除条形码 ID: ${barcode.id}, 条形码: ${barcode.barcodeId}'); // 调试日志
+        await provider.barcodeService.deleteBarcode(barcode.id!);
+        print('条形码删除成功，重新加载数据'); // 调试日志
+        await provider.loadBarcodes();
+        print('数据重新加载完成'); // 调试日志
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('条形码已删除'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        print('删除失败: $e'); // 调试日志
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('删除失败: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
+    } else {
+      print('删除操作被取消'); // 调试日志
     }
   }
 }

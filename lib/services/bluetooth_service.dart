@@ -15,9 +15,15 @@ class BluetoothService {
   fbp.BluetoothDevice? _connectedDevice;
   StreamSubscription<List<fbp.ScanResult>>? _scanSubscription;
   StreamSubscription<fbp.BluetoothConnectionState>? _connectionSubscription;
+  
+  // 忙碌状态标识，用于状态指示器优化
+  bool _isBusy = false;
 
   // 获取当前连接的设备
   fbp.BluetoothDevice? get connectedDevice => _connectedDevice;
+  
+  // 获取忙碌状态
+  bool? get isBusy => _isBusy;
 
   // 检查蓝牙权限
   Future<bool> checkPermissions() async {
@@ -127,6 +133,67 @@ class BluetoothService {
     }
   }
 
+  // 通过设备地址连接设备（用于重连已记住的设备）
+  Future<bool> connectToDeviceByAddress(String address) async {
+    try {
+      Logger.i('尝试连接设备地址: $address');
+      
+      // 首先尝试从当前连接的设备中查找
+      final connectedDevices = await fbp.FlutterBluePlus.connectedDevices;
+      for (final device in connectedDevices) {
+        if (device.remoteId.toString() == address) {
+          _connectedDevice = device;
+          Logger.i('找到已连接的设备: ${device.platformName}');
+          return true;
+        }
+      }
+      
+      // 如果没有找到已连接的设备，尝试扫描并连接
+      Logger.i('设备未连接，开始扫描...');
+      
+      // 先停止当前扫描
+      await fbp.FlutterBluePlus.stopScan();
+      
+      // 开始扫描设备
+      Completer<bool> completer = Completer<bool>();
+      StreamSubscription<List<fbp.ScanResult>>? scanSubscription;
+      
+      // 设置超时
+      Timer(const Duration(seconds: 15), () {
+        if (!completer.isCompleted) {
+          scanSubscription?.cancel();
+          fbp.FlutterBluePlus.stopScan();
+          completer.complete(false);
+        }
+      });
+      
+      scanSubscription = fbp.FlutterBluePlus.scanResults.listen((results) async {
+        for (final result in results) {
+          if (result.device.remoteId.toString() == address) {
+            Logger.i('找到目标设备: ${result.device.platformName}');
+            scanSubscription?.cancel();
+            await fbp.FlutterBluePlus.stopScan();
+            
+            // 尝试连接
+            final success = await connectToDevice(result.device);
+            if (!completer.isCompleted) {
+              completer.complete(success);
+            }
+            return;
+          }
+        }
+      });
+      
+      // 开始扫描
+      await fbp.FlutterBluePlus.startScan(timeout: const Duration(seconds: 15));
+      
+      return await completer.future;
+    } catch (e) {
+      Logger.e('通过地址连接设备失败', e);
+      return false;
+    }
+  }
+
   // 断开连接
   Future<void> disconnectDevice() async {
     if (_connectedDevice != null) {
@@ -160,6 +227,7 @@ class BluetoothService {
       throw Exception('没有连接的设备');
     }
 
+    _isBusy = true; // 设置忙碌状态
     try {
       // 发现服务
       List<dynamic> services = await _connectedDevice!.discoverServices();
@@ -209,6 +277,8 @@ class BluetoothService {
     } catch (e) {
       Logger.e('发送原始数据失败', e);
       return false;
+    } finally {
+      _isBusy = false; // 清除忙碌状态
     }
   }
 
@@ -237,6 +307,7 @@ class BluetoothService {
 
   // 写入数据到设备 (用于发送ADC命令)
   Future<bool> writeData(List<int> data) async {
+    _isBusy = true; // 设置忙碌状态
     try {
       if (_connectedDevice == null) {
         throw Exception('设备未连接');
@@ -282,11 +353,14 @@ class BluetoothService {
     } catch (e) {
       Logger.e('写入数据失败', e);
       return false;
+    } finally {
+      _isBusy = false; // 清除忙碌状态
     }
   }
   
   // 从设备读取数据 (用于接收ADC响应)
   Future<List<int>?> readData() async {
+    _isBusy = true; // 设置忙碌状态
     try {
       if (_connectedDevice == null) {
         throw Exception('设备未连接');
@@ -332,6 +406,8 @@ class BluetoothService {
     } catch (e) {
       Logger.e('读取数据失败', e);
       return null;
+    } finally {
+      _isBusy = false; // 清除忙碌状态
     }
   }
   

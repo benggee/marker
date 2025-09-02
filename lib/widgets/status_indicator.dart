@@ -15,6 +15,17 @@ class _StatusIndicatorState extends State<StatusIndicator> {
   double _batteryLevel = 0.0;
   double _temperature = 0.0;
   bool _isConnected = false;
+  
+  // 缓存的上一次有效数据
+  double? _cachedBatteryLevel;
+  double? _cachedTemperature;
+  DateTime? _lastSuccessfulUpdate;
+  
+  // 状态管理
+  bool _isUpdating = false;
+  int _consecutiveFailures = 0;
+  static const int _maxConsecutiveFailures = 3;
+  static const Duration _cacheValidDuration = Duration(minutes: 5);
 
   @override
   void initState() {
@@ -25,7 +36,11 @@ class _StatusIndicatorState extends State<StatusIndicator> {
   }
 
   void _startPeriodicUpdate() {
-    Future.delayed(const Duration(seconds: 5), () {
+    // 动态调整更新间隔：失败次数越多，间隔越长
+    Duration updateInterval = Duration(seconds: 5 + (_consecutiveFailures * 2));
+    updateInterval = Duration(seconds: updateInterval.inSeconds.clamp(5, 30));
+    
+    Future.delayed(updateInterval, () {
       if (mounted) {
         _fetchDeviceStatus();
         _startPeriodicUpdate();
@@ -34,39 +49,133 @@ class _StatusIndicatorState extends State<StatusIndicator> {
   }
 
   Future<void> _fetchDeviceStatus() async {
+    // 防止重复更新
+    if (_isUpdating) {
+      debugPrint('设备状态更新中，跳过本次请求');
+      return;
+    }
+    
+    _isUpdating = true;
+    
     try {
       final provider = Provider.of<AppProvider>(context, listen: false);
       
       if (provider.connectedDevice != null) {
+        // 检查是否正在打印
+        bool isPrinting = _isProviderBusy(provider);
+        
+        if (isPrinting && _shouldUseCachedData()) {
+          // 正在打印且有有效缓存数据，使用缓存数据
+          debugPrint('设备正在打印，使用缓存数据');
+          _useCachedDataIfAvailable();
+          _isUpdating = false;
+          return;
+        }
+        
         setState(() {
           _isConnected = true;
         });
         
         // 获取电池电量和温度
-        final deviceData = await _readDeviceData(provider);
+        final deviceData = await _readDeviceDataWithTimeout(provider);
         if (deviceData != null) {
-          setState(() {
-            _batteryLevel = deviceData['battery'] ?? 0.0;
-            _temperature = deviceData['temperature'] ?? 0.0;
-          });
+          // 更新成功，缓存数据
+          _updateSuccessfulData(deviceData);
+          _consecutiveFailures = 0;
+        } else {
+          // 更新失败，使用缓存数据或保持当前值
+          _handleUpdateFailure();
         }
       } else {
-        // 当没有连接设备时，显示模拟数据用于测试界面
-        setState(() {
-          _isConnected = false;
-          _batteryLevel = 75.0; // 模拟75%电量
-          _temperature = 28.5;  // 模拟28.5度温度
-        });
+        // 没有连接设备时的处理
+        _handleDisconnectedState();
       }
     } catch (e) {
-      // 可以使用Logger.e替代print，但这里简化处理
       debugPrint('获取设备状态失败: $e');
-      // 出错时也显示模拟数据
+      _handleUpdateFailure();
+    } finally {
+      _isUpdating = false;
+    }
+  }
+
+  // 检查Provider是否正在执行打印任务
+  bool _isProviderBusy(AppProvider provider) {
+    // 这里需要根据AppProvider的实际实现来判断是否正在打印
+    // 假设AppProvider有isPrinting属性或类似的状态标识
+    try {
+      // 可以通过检查蓝牙服务是否正在发送数据来判断
+      return provider.bluetoothService.isBusy ?? false;
+    } catch (e) {
+      return false;
+    }
+  }
+  
+  // 检查是否应该使用缓存数据
+  bool _shouldUseCachedData() {
+    if (_lastSuccessfulUpdate == null) return false;
+    return DateTime.now().difference(_lastSuccessfulUpdate!) < _cacheValidDuration;
+  }
+  
+  // 使用缓存数据
+  void _useCachedDataIfAvailable() {
+    if (_cachedBatteryLevel != null && _cachedTemperature != null) {
+      setState(() {
+        _batteryLevel = _cachedBatteryLevel!;
+        _temperature = _cachedTemperature!;
+        _isConnected = true;
+      });
+    }
+  }
+  
+  // 更新成功的数据
+  void _updateSuccessfulData(Map<String, double> deviceData) {
+    setState(() {
+      _batteryLevel = deviceData['battery'] ?? _batteryLevel;
+      _temperature = deviceData['temperature'] ?? _temperature;
+      _isConnected = true;
+    });
+    
+    // 缓存有效数据
+    _cachedBatteryLevel = _batteryLevel;
+    _cachedTemperature = _temperature;
+    _lastSuccessfulUpdate = DateTime.now();
+  }
+  
+  // 处理更新失败
+  void _handleUpdateFailure() {
+    _consecutiveFailures++;
+    
+    if (_consecutiveFailures < _maxConsecutiveFailures && _shouldUseCachedData()) {
+      // 失败次数不多且缓存有效，使用缓存数据
+      _useCachedDataIfAvailable();
+    } else if (_consecutiveFailures >= _maxConsecutiveFailures) {
+      // 连续失败太多次，显示断开状态但保持数据
       setState(() {
         _isConnected = false;
-        _batteryLevel = 45.0; // 模拟45%电量
-        _temperature = 25.0;  // 模拟25度温度
+        // 保持最后的电量和温度数据不变
       });
+    }
+  }
+  
+  // 处理断开连接状态
+  void _handleDisconnectedState() {
+    setState(() {
+      _isConnected = false;
+      // 断开连接时使用默认值，但不清除缓存
+      _batteryLevel = 75.0; // 模拟75%电量
+      _temperature = 28.5;  // 模拟28.5度温度
+    });
+  }
+  
+  // 带超时的数据读取
+  Future<Map<String, double>?> _readDeviceDataWithTimeout(AppProvider provider) async {
+    try {
+      return await _readDeviceData(provider).timeout(
+        const Duration(seconds: 3), // 3秒超时
+      );
+    } catch (e) {
+      debugPrint('数据读取超时或失败: $e');
+      return null;
     }
   }
 

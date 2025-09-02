@@ -161,7 +161,7 @@ class _ScannerPageState extends State<ScannerPage> {
                   children: [
                     // 扫码图标
                     IconButton(
-                      icon: const Icon(Icons.qr_code_scanner),
+                      icon: const Icon(Icons.crop_free),
                       onPressed: _scanBarcode,
                       tooltip: '扫描条形码',
                     ),
