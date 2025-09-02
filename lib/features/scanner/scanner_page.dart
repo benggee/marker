@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/status_indicator.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -11,6 +12,14 @@ class _ScannerPageState extends State<ScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('扫描'),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: StatusIndicator(),
+        ),
+        leadingWidth: 160, // 给状态指示器留足够的空间
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

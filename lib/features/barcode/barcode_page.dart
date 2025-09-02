@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_provider.dart';
+import '../../core/app_theme.dart';
 import '../../models/barcode_model.dart';
 import '../../widgets/barcode_widget.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/status_indicator.dart';
 
 class BarcodePage extends StatefulWidget {
   const BarcodePage({super.key});
@@ -24,48 +26,32 @@ class _BarcodePageState extends State<BarcodePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          // 顶部操作栏
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.blue,
-            child: Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    '条形码管理',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  onPressed: _generateBarcode,
-                ),
-              ],
-            ),
-          ),
-          // 内容区域
-          Expanded(
-            child: Consumer<AppProvider>(
-              builder: (context, provider, child) {
-                if (provider.isLoading) {
-                  return const LoadingWidget(message: '加载中...');
-                }
-
-                if (provider.barcodes.isEmpty) {
-                  return _buildEmptyState();
-                }
-
-                return _buildBarcodeList(provider);
-              },
-            ),
+      appBar: AppBar(
+        title: const Text('条形码'),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: StatusIndicator(),
+        ),
+        leadingWidth: 160, // 给状态指示器留足够的空间
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _generateBarcode,
           ),
         ],
+      ),
+      body: Consumer<AppProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const LoadingWidget(message: '加载中...');
+          }
+
+          if (provider.barcodes.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return _buildBarcodeList(provider);
+        },
       ),
     );
   }
@@ -78,15 +64,15 @@ class _BarcodePageState extends State<BarcodePage> {
           Icon(
             Icons.qr_code_scanner,
             size: 80,
-            color: Colors.grey.shade400,
+            color: AppColors.textLight,
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             '还没有条形码',
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 24),
@@ -94,10 +80,6 @@ class _BarcodePageState extends State<BarcodePage> {
             onPressed: _generateBarcode,
             icon: const Icon(Icons.add),
             label: const Text('生成条形码'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
           ),
         ],
       ),
@@ -162,10 +144,7 @@ class _BarcodePageState extends State<BarcodePage> {
                     onPressed: () => _printBarcode(barcode, provider),
                     icon: const Icon(Icons.print),
                     label: const Text('打印'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
-                    ),
+
                   ),
                 ),
               ],
@@ -227,7 +206,7 @@ class _BarcodePageState extends State<BarcodePage> {
               Text('正在打印条形码 ${barcode.barcodeId.padLeft(6, '0')}...'),
             ],
           ),
-          backgroundColor: Colors.blue,
+          backgroundColor: AppColors.primaryBlue,
           duration: const Duration(seconds: 10),
         ),
       );

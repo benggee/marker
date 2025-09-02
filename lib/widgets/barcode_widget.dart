@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:barcode/barcode.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../core/app_theme.dart';
 
 class BarcodeDisplayWidget extends StatelessWidget {
   final String barcodeId;
@@ -20,9 +21,9 @@ class BarcodeDisplayWidget extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.dividerColor),
         borderRadius: BorderRadius.circular(8),
-        color: Colors.white,
+        color: AppColors.cardBackground,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -43,10 +44,10 @@ class BarcodeDisplayWidget extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(
               barcodeId.padLeft(6, '0'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: AppColors.textPrimary,
               ),
             ),
           ),

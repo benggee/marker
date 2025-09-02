@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_provider.dart';
+import 'core/app_theme.dart';
 import 'features/bluetooth/bluetooth_page.dart';
 import 'features/barcode/barcode_page.dart';
 import 'features/scanner/scanner_page.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -18,10 +20,7 @@ class MyApp extends StatelessWidget {
       create: (context) => AppProvider()..initialize(),
       child: MaterialApp(
         title: '条形码管理系统',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          useMaterial3: true,
-        ),
+        theme: AppTheme.lightTheme,
         home: const MainPage(),
       ),
     );
@@ -44,21 +43,11 @@ class _MainPageState extends State<MainPage> {
     const BluetoothPage(),
   ];
 
-  final List<String> _titles = [
-    '条形码',
-    '扫描',
-    '蓝牙',
-  ];
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_titles[_currentIndex]),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 2,
-      ),
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -71,21 +60,22 @@ class _MainPageState extends State<MainPage> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
+        selectedItemColor: AppColors.primaryBlue,
+        unselectedItemColor: AppColors.textLight,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code),
-            label: '条形码',
+            icon: Icon(Icons.print_sharp),
+            label: '打印',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.qr_code_scanner),
-            label: '扫描',
+            icon: Icon(Icons.search_rounded),
+            label: '查询',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bluetooth),
-            label: '蓝牙',
+            icon: Icon(Icons.device_hub),
+            label: '设备',
           ),
+
         ],
       ),
     );

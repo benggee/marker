@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../providers/app_provider.dart';
 import '../../models/bluetooth_device_model.dart';
 import '../../widgets/loading_widget.dart';
+import '../../widgets/status_indicator.dart';
 import '../../utils/permission_helper.dart';
 import '../../utils/logger.dart';
 
@@ -106,6 +107,14 @@ class _BluetoothPageState extends State<BluetoothPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('蓝牙'),
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 8.0),
+          child: StatusIndicator(),
+        ),
+        leadingWidth: 160, // 给状态指示器留足够的空间
+      ),
       body: Consumer<AppProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
@@ -201,8 +210,6 @@ class _BluetoothPageState extends State<BluetoothPage> {
               : const Icon(Icons.search),
           label: Text(_isScanning ? '扫描中...' : '扫描设备'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
         ),

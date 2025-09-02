@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart' as fbp;
 import 'package:permission_handler/permission_handler.dart';
 import '../models/bluetooth_device_model.dart';
 import 'database_service.dart';
@@ -12,12 +12,12 @@ class BluetoothService {
   BluetoothService._internal();
 
   final DatabaseService _databaseService = DatabaseService();
-  BluetoothDevice? _connectedDevice;
-  StreamSubscription<List<ScanResult>>? _scanSubscription;
-  StreamSubscription<BluetoothConnectionState>? _connectionSubscription;
+  fbp.BluetoothDevice? _connectedDevice;
+  StreamSubscription<List<fbp.ScanResult>>? _scanSubscription;
+  StreamSubscription<fbp.BluetoothConnectionState>? _connectionSubscription;
 
   // 获取当前连接的设备
-  BluetoothDevice? get connectedDevice => _connectedDevice;
+  fbp.BluetoothDevice? get connectedDevice => _connectedDevice;
 
   // 检查蓝牙权限
   Future<bool> checkPermissions() async {
@@ -50,19 +50,19 @@ class BluetoothService {
 
   // 检查蓝牙是否开启
   Future<bool> isBluetoothEnabled() async {
-    return await FlutterBluePlus.isSupported && await FlutterBluePlus.adapterState.first == BluetoothAdapterState.on;
+    return await fbp.FlutterBluePlus.isSupported && await fbp.FlutterBluePlus.adapterState.first == fbp.BluetoothAdapterState.on;
   }
 
   // 开启蓝牙
   Future<void> turnOnBluetooth() async {
-    if (await FlutterBluePlus.isSupported) {
-      await FlutterBluePlus.turnOn();
+    if (await fbp.FlutterBluePlus.isSupported) {
+      await fbp.FlutterBluePlus.turnOn();
     }
   }
 
   // 扫描设备
-  Stream<List<BluetoothDevice>> scanForDevices() {
-    return FlutterBluePlus.scanResults.map((results) {
+  Stream<List<fbp.BluetoothDevice>> scanForDevices() {
+    return fbp.FlutterBluePlus.scanResults.map((results) {
       return results.map((result) => result.device).toList();
     });
   }
@@ -82,7 +82,7 @@ class BluetoothService {
       }
 
       // 开始扫描
-      await FlutterBluePlus.startScan(timeout: timeout);
+      await fbp.FlutterBluePlus.startScan(timeout: timeout);
       Logger.i('蓝牙扫描已开始');
     } catch (e) {
       Logger.e('开始扫描失败', e);
@@ -92,11 +92,11 @@ class BluetoothService {
 
   // 停止扫描
   Future<void> stopScan() async {
-    await FlutterBluePlus.stopScan();
+    await fbp.FlutterBluePlus.stopScan();
   }
 
   // 连接设备
-  Future<bool> connectToDevice(BluetoothDevice device) async {
+  Future<bool> connectToDevice(fbp.BluetoothDevice device) async {
     try {
       await device.connect(timeout: const Duration(seconds: 10));
       _connectedDevice = device;
@@ -115,7 +115,7 @@ class BluetoothService {
       
       // 监听连接状态
       _connectionSubscription = device.connectionState.listen((state) {
-        if (state == BluetoothConnectionState.disconnected) {
+        if (state == fbp.BluetoothConnectionState.disconnected) {
           _connectedDevice = null;
         }
       });
@@ -233,6 +233,143 @@ class BluetoothService {
     );
     
     await _databaseService.updateBluetoothDevice(updatedDevice);
+  }
+
+  // 写入数据到设备 (用于发送ADC命令)
+  Future<bool> writeData(List<int> data) async {
+    try {
+      if (_connectedDevice == null) {
+        throw Exception('设备未连接');
+      }
+      
+      // 获取设备服务
+      List<fbp.BluetoothService> services = await _connectedDevice!.discoverServices();
+      fbp.BluetoothCharacteristic? targetCharacteristic;
+      
+      // 查找目标特征 (使用固定的UUID)
+      for (fbp.BluetoothService service in services) {
+        for (fbp.BluetoothCharacteristic characteristic in service.characteristics) {
+          if (characteristic.characteristicUuid.toString() == 'beb5483e-36e1-4688-b7f5-ea07361b26a8') {
+            targetCharacteristic = characteristic;
+            break;
+          }
+        }
+        if (targetCharacteristic != null) break;
+      }
+      
+      if (targetCharacteristic == null) {
+        // 如果没找到特定特征，尝试第一个可写特征
+        for (fbp.BluetoothService service in services) {
+          for (fbp.BluetoothCharacteristic characteristic in service.characteristics) {
+            if (characteristic.properties.write || characteristic.properties.writeWithoutResponse) {
+              targetCharacteristic = characteristic;
+              break;
+            }
+          }
+          if (targetCharacteristic != null) break;
+        }
+      }
+      
+      if (targetCharacteristic == null) {
+        throw Exception('未找到可写的特征');
+      }
+      
+      // 发送数据
+      await targetCharacteristic.write(Uint8List.fromList(data), withoutResponse: false);
+      Logger.i('成功发送数据: $data');
+      
+      return true;
+    } catch (e) {
+      Logger.e('写入数据失败', e);
+      return false;
+    }
+  }
+  
+  // 从设备读取数据 (用于接收ADC响应)
+  Future<List<int>?> readData() async {
+    try {
+      if (_connectedDevice == null) {
+        throw Exception('设备未连接');
+      }
+      
+      // 获取设备服务
+      List<fbp.BluetoothService> services = await _connectedDevice!.discoverServices();
+      fbp.BluetoothCharacteristic? targetCharacteristic;
+      
+      // 查找目标特征
+      for (fbp.BluetoothService service in services) {
+        for (fbp.BluetoothCharacteristic characteristic in service.characteristics) {
+          if (characteristic.characteristicUuid.toString() == 'beb5483e-36e1-4688-b7f5-ea07361b26a8') {
+            targetCharacteristic = characteristic;
+            break;
+          }
+        }
+        if (targetCharacteristic != null) break;
+      }
+      
+      if (targetCharacteristic == null) {
+        // 如果没找到特定特征，尝试第一个可读特征
+        for (fbp.BluetoothService service in services) {
+          for (fbp.BluetoothCharacteristic characteristic in service.characteristics) {
+            if (characteristic.properties.read) {
+              targetCharacteristic = characteristic;
+              break;
+            }
+          }
+          if (targetCharacteristic != null) break;
+        }
+      }
+      
+      if (targetCharacteristic == null) {
+        throw Exception('未找到可读的特征');
+      }
+      
+      // 读取数据
+      List<int> data = await targetCharacteristic.read();
+      Logger.i('成功读取数据: $data');
+      
+      return data;
+    } catch (e) {
+      Logger.e('读取数据失败', e);
+      return null;
+    }
+  }
+  
+  // 启用特征通知 (用于实时监听设备状态)
+  Future<Stream<List<int>>?> enableNotifications() async {
+    try {
+      if (_connectedDevice == null) {
+        throw Exception('设备未连接');
+      }
+      
+      // 获取设备服务
+      List<fbp.BluetoothService> services = await _connectedDevice!.discoverServices();
+      fbp.BluetoothCharacteristic? targetCharacteristic;
+      
+      // 查找目标特征
+      for (fbp.BluetoothService service in services) {
+        for (fbp.BluetoothCharacteristic characteristic in service.characteristics) {
+          if (characteristic.characteristicUuid.toString() == 'beb5483e-36e1-4688-b7f5-ea07361b26a8') {
+            targetCharacteristic = characteristic;
+            break;
+          }
+        }
+        if (targetCharacteristic != null) break;
+      }
+      
+      if (targetCharacteristic == null) {
+        throw Exception('未找到目标特征');
+      }
+      
+      // 启用通知
+      await targetCharacteristic.setNotifyValue(true);
+      Logger.i('成功启用特征通知');
+      
+      return targetCharacteristic.value;
+    } catch (e) {
+      Logger.e('启用通知失败', e);
+      return null;
+    }
   }
 
   // 释放资源
