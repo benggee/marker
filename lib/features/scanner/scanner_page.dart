@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:barcode_scan2/barcode_scan2.dart';
 import '../../widgets/status_indicator.dart';
 import '../../widgets/barcode_widget.dart';
 import '../../models/barcode_model.dart';
@@ -86,6 +87,43 @@ class _ScannerPageState extends State<ScannerPage> {
     }
   }
 
+  Future<void> _scanBarcode() async {
+    try {
+      final result = await BarcodeScanner.scan();
+      
+      if (result.type == ResultType.Barcode && result.rawContent.isNotEmpty) {
+        final scannedCode = result.rawContent;
+        
+        // 在数据库中查找这个条形码
+        final barcode = _barcodes.firstWhere(
+          (b) => b.barcodeId == scannedCode,
+          orElse: () => throw Exception('条形码未找到'),
+        );
+        
+        // 找到了，跳转到详情页
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BarcodeDetailPage(barcode: barcode),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().contains('条形码未找到') 
+                ? '扫描的条形码不存在于数据库中' 
+                : '扫描失败: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,16 +156,27 @@ class _ScannerPageState extends State<ScannerPage> {
               decoration: InputDecoration(
                 hintText: '搜索物品名称或描述...',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 扫码图标
+                    IconButton(
+                      icon: const Icon(Icons.qr_code_scanner),
+                      onPressed: _scanBarcode,
+                      tooltip: '扫描条形码',
+                    ),
+                    // 清除图标（仅在有文本时显示）
+                    if (_searchController.text.isNotEmpty)
+                      IconButton(
                         icon: const Icon(Icons.clear),
                         onPressed: () async {
                           _searchController.clear();
                           await _filterBarcodes(); // 触发重建和搜索过滤
                           setState(() {});
                         },
-                      )
-                    : null,
+                      ),
+                  ],
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
