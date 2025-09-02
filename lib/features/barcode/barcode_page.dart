@@ -100,27 +100,21 @@ class _BarcodePageState extends State<BarcodePage> {
   Widget _buildBarcodeCard(BarcodeModel barcode, AppProvider provider) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Stack(
-        children: [
+      child: Container(
+        height: 230, // 设置足够的高度
+        child: Stack(
+          children: [
           Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                const SizedBox(height: 32), // 给条形码上方更多间距
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20), // 条形码容器内部间距
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade200),
-                  ),
-                  child: BarcodeDisplayWidget(
-                    barcodeId: barcode.barcodeId,
-                    width: 280,
-                    height: 80,
-                  ),
+                const SizedBox(height: 10), // 增加条形码上方间距
+                BarcodeDisplayWidget(
+                  barcodeId: barcode.barcodeId,
+                  width: 280,
+                  height: 130,
                 ),
-                const SizedBox(height: 16), // 底部间距
+                const SizedBox(height: 10), // 底部间距
                 Row(
                   children: [
                     Expanded(
@@ -135,14 +129,14 @@ class _BarcodePageState extends State<BarcodePage> {
               ],
             ),
           ),
-          // 菜单按钮放在卡片外围右上角
+          // 菜单按钮放在卡片右上角
           Positioned(
-            top: -2,
-            right: -2,
+            top: 2,
+            right: -8,
             child: PopupMenuButton<String>(
               onSelected: (value) => _handleMenuAction(value, barcode, provider),
               color: Colors.white,
-              elevation: 8,
+              elevation: 4,
               itemBuilder: (context) => [
                 const PopupMenuItem(
                   value: 'print',
@@ -168,6 +162,7 @@ class _BarcodePageState extends State<BarcodePage> {
             ),
           ),
         ],
+        ),
       ),
     );
   }
