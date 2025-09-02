@@ -205,7 +205,7 @@ class _ScannerPageState extends State<ScannerPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            isSearching ? Icons.search_off : Icons.qr_code_2,
+            isSearching ? Icons.search_off : Icons.view_stream,
             size: 100,
             color: Colors.grey,
           ),

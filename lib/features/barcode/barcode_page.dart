@@ -62,7 +62,7 @@ class _BarcodePageState extends State<BarcodePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.qr_code_scanner,
+            Icons.view_stream,
             size: 80,
             color: AppColors.textLight,
           ),
